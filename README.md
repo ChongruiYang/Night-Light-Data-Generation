@@ -198,7 +198,7 @@
      
 - 2023/2/5 第一版数据处理
 
-1) 拿到CMS提供的数据之后，校正坐标系与地图（source：https://github.com/GaryBikini/ChinaAdminDivisonSHP）到WGS 1984
+1) 拿到CMS提供的数据之后，校正坐标系与地图(base map source：https://github.com/GaryBikini/ChinaAdminDivisonSHP) 到WGS 1984
 2) 采用经济强度法，选择“北京”，“上海”，“广州”三个城市范围内的最大灯光栅格单元值，以此作为阈值，将全国其他地方高于此阈值的栅格替换
 3) 统计每个城市地理边界内的灯光强度指标，count代表该城市内的像元个数，MEAN代表平均值，即我们想用的简单平均值
 
