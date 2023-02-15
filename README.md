@@ -198,7 +198,7 @@
      
 - 2023/2/5 第一版数据处理
 
-1) 拿到CMS提供的数据之后，校正坐标系与地图(base map source：https://github.com/GaryBikini/ChinaAdminDivisonSHP) 到WGS 1984
+1) 拿到CMS提供的数据之后，校正坐标系与地图（source：https://github.com/GaryBikini/ChinaAdminDivisonSHP）到WGS 1984
 2) 采用经济强度法，选择“北京”，“上海”，“广州”三个城市范围内的最大灯光栅格单元值，以此作为阈值，将全国其他地方高于此阈值的栅格替换
 3) 统计每个城市地理边界内的灯光强度指标，count代表该城市内的像元个数，MEAN代表平均值，即我们想用的简单平均值
 
@@ -234,3 +234,35 @@ MEDIAN：区域内像元的中位数
 PCT90：区域内像元的90分位数
 
 time：时间（年-月）
+
+
+   - 2023/2/10 第二版数据处理
+
+1）同样使用CSM处理过的月度灯光数据，其过滤了杂散光的影响，但会导致夏季北部地区缺少观测值。
+
+2）采用2019年为基期，选取2019_composite_average_mask文件作为掩膜（这一数据由CSM提供，是他们合成的年度平均数据），提取出其中每个行政区域中大于像元值1%，5%，10%，20%，50%的像元值作为建成区域。并在确定建成区域后沿用这个建成区到之后的每一个月度的灯光数据上，计算之前所述的相同统计量。以下是各种不同分位数的建成区掩膜，由于1%，5%，10%的掩膜都非常相近（因为大部分地区的1%，5%，10%的像元值都是0），故仅制作10%，20%，50%以上区域的掩膜。观察地图我们可以知道改变不同分位数导致建成区的缩小主要集中在东部城市。
+
+<div align=center><image src= "https://user-images.githubusercontent.com/82168423/218945027-9123d125-22cc-48d2-a4ba-62fda08442e6.png" /></div>
+<div align=center>2019 year average light over 10% areas of each city (Mask)</div>
+
+<div align=center><image src= "https://user-images.githubusercontent.com/82168423/218945598-e6f0b60f-9fc9-409f-9751-00bbe0309f40.png" /></div>
+<div align=center>2019 year average light over 20% areas of each city (Mask)</div>
+
+<div align=center><image src= "https://user-images.githubusercontent.com/82168423/218946163-39caa07a-4ce5-45aa-8905-78221c3d5f70.png" /></div>
+<div align=center>2019 year average light over 50% areas of each city (Mask)</div>
+
+
+参见Arcgis Pro功能：分区统计与栅格表达式：`Con(( "VNL_v21_npp_2019_global_Clip"> "avg_percent1"), 1,0)`,`SetNull("avg_1_cover"==0,"SVDNB_npp_20190101-20190131_75N060E_vcmcfg_v10_c201905201300.avg_rade9h.tif")`，这一步将掩膜不超过分位数的区域替换成无观测值。
+
+3）对所有城市中每个月可能存在的异常值做截断，仍然采用经济强度法，并对北京，上海，广州三地最大值超过1000的月份替换成1000（正常的月度像元值应该在500左右），以避免像元单位内的光源值过大，每月最大值的threshold可以见表：[max_pixel.csv](https://github.com/JRCCE/VIIRS-DNB_analysis/files/10716385/max_pixel.csv)
+
+4）分区域统计所在地区的像元平均值与分位数
+
+5）合并历年的像元统计值文件，并检查每年每月的每一个文件中的统计像元格个数是否一致
+
+注意：
+1）对于5-8月份的数据，由于杂散光原因，观测非常不可信。例如北京的2020年5月份光照值，在10%的版本中仅为0.6，像元加总观测值仅为30000。在查询天气预报确认该年5月份基本无雨后，检查CSM提供的无云观测记录，发现此时北京的可观测日期多为1日或0日，天津同月份观测情况稍好但也存在这一现象。这是系统性的误差，所以最好不要使用5-8月份的数据，而全国数据可以使用对比的为10月份至次年3月份数据。再重复一下：不是有数据的地方就能用，看每个区域的summary！
+
+处理后数据：
+
+see：[light_over_20.xlsx](https://github.com/JRCCE/VIIRS-DNB_analysis/files/10740888/light_over_20.xlsx)；[light_over_50.xlsx](https://github.com/JRCCE/VIIRS-DNB_analysis/files/10740895/light_over_50.xlsx)；[light_over_10.xlsx](https://github.com/JRCCE/VIIRS-DNB_analysis/files/10740904/light_over_10.xlsx)
